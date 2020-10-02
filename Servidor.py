@@ -1,6 +1,7 @@
-# servidor de ping
-# uso:
-# python3 pingServidor.py [<porta servidor>]
+# Trabalho 1 de INF1407
+# Jéssica Pereira - 1711179
+# Gabriel Heffer Matheus - 1710603
+
 
 from sys import argv, exit
 from socket import socket, AF_INET, SOCK_STREAM
@@ -10,17 +11,15 @@ from speech_recognition import AudioData
 import speech_recognition as sr
 import time
 
-
-_service = None
-
-
 class _Text2Speech:
     def __init__(self):
         return
 
     def run(self, text, conn):
         text = str(text)
+        text = text[1:]
         output = gTTS(text=text, lang='pt', slow=False)
+
         output.save("output.mp3")
         with open("output.mp3", "rb") as file:
             speech_mp3_bytes = file.read()
@@ -43,8 +42,10 @@ class _Speech2Text:
             frase = speech_rec.recognize_google(audio, language='pt-BR')
             # Após alguns segundos, retorna a frase falada
             conn.sendall(bytes(frase, encoding='utf-8'))
-            # Caso nao tenha reconhecido o padrao de fala, exibe esta mensagem
+
         except:
+            # Caso nao tenha reconhecido o padrao de fala, exibe esta mensagem
+            print("nao foi possivel traduzir a mensagem")
             pass
         return
 
@@ -78,7 +79,7 @@ def connection(conn, cliente):
         if len(msg):
             service.run(msg, conn)
         else:
-            print(f"Conexão encerrada por {cliente}")
+            print("Mensagem nao recebida")
             conn.close()
             break
     _thread.exit()

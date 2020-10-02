@@ -1,13 +1,15 @@
-# cliente de ping
-# uso:
-# python3 pingCliente.py [<endereco servidor> [<porta servidor>]]
+# Trabalho 1 de INF1407
+# Jéssica Pereira - 1711179
+# Gabriel Heffer Matheus - 1710603
 
 from sys import argv
 from socket import socket, AF_INET, SOCK_STREAM
 from time import sleep
 
+from gtts import gTTS
+import playsound
+import os
 import speech_recognition as sr
-
 
 
 def ouvir_microfone():
@@ -31,35 +33,43 @@ def main():
     print('Entre com 1 se deseja escrever uma frase')
     escolha = input()
 
-
     # conectando com o servidor
     destino = (host, porta)
     servidor.connect(destino)
     servidor.send(bytearray(escolha, 'utf-8'))
 
-    if (escolha == '1'):
+    if escolha == '1':
         print('Entre com a frase desejada:')
         msg = input()
-        # enviando msg para o servidor
+
+        # enviando/recebendo msg para o servidor
         try:
-            servidor.send(bytearray(msg, 'utf-8'))
+            servidor.send(bytearray(" "+msg, 'utf-8'))
+
             resposta = servidor.recv(2 ** 20)
             open("output.mp3", "wb").write(resposta)
 
+            print("Reproduzindo...")
+            playsound.playsound("output.mp3")
+
         except:
             print("Algo esta errado com a frase")
-    else:
+
+    elif not int(escolha):
         audio = ouvir_microfone()
-        # enviando msg para o servidor
+        print("Traduzindo...")
+        # enviando/recebendo msg para o servidor
         try:
             servidor.send(audio.frame_data)
             resposta = servidor.recv(2 ** 20).decode()
-            print("Resposta do servido: ", resposta)
+            print("Voce disse: ", resposta)
 
         except:
             print("Algo esta errado com o audio")
 
-
+    else:
+        print("Escolha invalida")
+        return
 
     servidor.close()
     return
