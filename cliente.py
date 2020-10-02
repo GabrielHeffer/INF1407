@@ -35,27 +35,25 @@ def main():
     # conectando com o servidor
     destino = (host, porta)
     servidor.connect(destino)
-
+    servidor.send(bytearray(escolha, 'utf-8'))
 
     if (escolha == '1'):
         print('Entre com a frase desejada:')
         msg = input()
         # enviando msg para o servidor
-        while True:
-            try:
-                servidor.send(bytearray(msg, 'utf-8'))
+        try:
+            servidor.send(bytearray(msg, 'utf-8'))
 
-            except:
-                print("Algo esta errado com a frase")
+        except:
+            print("Algo esta errado com a frase")
     else:
         audio = ouvir_microfone()
         # enviando msg para o servidor
-        while True:
-            try:
-                servidor.send(audio.frame_data)
+        try:
+            servidor.send(audio.frame_data)
 
-            except:
-                print("Algo esta errado com o audio")
+        except:
+            print("Algo esta errado com o audio")
     return
 
 
