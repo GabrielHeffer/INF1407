@@ -4,7 +4,7 @@
 
 from sys import argv, exit
 from socket import socket, AF_INET, SOCK_STREAM
-from os import fork
+import _thread
 from gtts import gTTS
 from speech_recognition import AudioData
 import speech_recognition as sr
@@ -19,11 +19,15 @@ class _Text2Speech:
         return
 
     def run(self, text, conn):
+        text = str(text)
         output = gTTS(text=text, lang='pt', slow=False)
         output.save("output.mp3")
         with open("output.mp3", "rb") as file:
             speech_mp3_bytes = file.read()
-        conn.sendall(speech_mp3_bytes)
+        try:
+            conn.sendall(speech_mp3_bytes)
+        except:
+            pass
         return
 
 
@@ -38,41 +42,45 @@ class _Speech2Text:
             # Passa o audio para o reconhecedor de padroes do speech_recognition
             frase = speech_rec.recognize_google(audio, language='pt-BR')
             # Após alguns segundos, retorna a frase falada
-            conn.sendall(bytes(frase))
+            conn.sendall(bytes(frase, encoding='utf-8'))
             # Caso nao tenha reconhecido o padrao de fala, exibe esta mensagem
         except:
-            conn.sendall(bytes())
+            pass
         return
 
 
-def choose_service(conn):
-    global _service
+def connection(conn, cliente):
+    service = None
+    print(f"Conectado por {cliente}")
     while True:
-        msg = conn.recv(4096)
+        try:
+            msg = conn.recv(4096)
+        except:
+            print(f"Conexão encerrada por {cliente}")
+            _thread.exit()
+            return
         if not msg:
-            continue
+            conn.close()
+            _thread.exit()
+            return
         if int(msg):
-            _service = _Text2Speech()
+            service = _Text2Speech()
         elif not int(msg):
-            _service = _Speech2Text()
+            service = _Speech2Text()
         break
-    return
-
-
-def execute_service(conn):
-    global _service
-    tolerance_connection = 8
-    msg = bytes()
     while True:
-        buff_msg = conn.recv(4096)
-        if buff_msg:
-            msg += buff_msg
-        elif not tolerance_connection:
-            _service.run(msg, conn)
-            break
+        try:
+            msg = conn.recv(2**20)
+        except:
+            print(f"Conexão encerrada por {cliente}")
+            _thread.exit()
+            return
+        if len(msg):
+            service.run(msg, conn)
         else:
-            time.sleep(0.05)
-            tolerance_connection -= 0.05
+            conn.close()
+            break
+    _thread.exit()
     return
 
 
@@ -91,21 +99,8 @@ def main():
         # retorna um socket com cliente e servidor e o endereco do cliente
         conn, cliente = tcp.accept()
         # Criar novo processo para servidor concorrente
-        pid = fork()    # 2o processo criado
-        if pid == 0:
-            # o filho nao precisa mais do socket sem o cliente
-            tcp.close()
-            print(f"Conectado por {cliente}")
-            choose_service(conn)
-            execute_service(conn)
-            conn.close()
-            # sair sem erro (abort sai com erro)
-            # quem esta saindo e' o filho (nao o pai)
-            exit()
-        else:
-            # e' pai
-            # o pai nao precisa do socket com o cliente
-            conn.close()
+        _thread.start_new_thread(connection, (conn, cliente))  # thread criada
+    tcp.close()
     return
 
 
