@@ -43,6 +43,7 @@ def main():
         # enviando msg para o servidor
         try:
             servidor.send(bytearray(msg, 'utf-8'))
+            resposta = servidor.recv(2 ** 20).decode()
 
         except:
             print("Algo esta errado com a frase")
@@ -51,9 +52,15 @@ def main():
         # enviando msg para o servidor
         try:
             servidor.send(audio.frame_data)
+            resposta = servidor.recv(2 ** 20).decode()
+            print("Resposta do servido: ", resposta)
 
         except:
             print("Algo esta errado com o audio")
+
+
+
+    servidor.close()
     return
 
 
