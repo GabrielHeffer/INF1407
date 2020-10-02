@@ -43,7 +43,8 @@ def main():
         # enviando msg para o servidor
         try:
             servidor.send(bytearray(msg, 'utf-8'))
-            resposta = servidor.recv(2 ** 20).decode()
+            resposta = servidor.recv(2 ** 20)
+            open("output.mp3", "wb").write(resposta)
 
         except:
             print("Algo esta errado com a frase")

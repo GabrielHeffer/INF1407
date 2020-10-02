@@ -78,6 +78,7 @@ def connection(conn, cliente):
         if len(msg):
             service.run(msg, conn)
         else:
+            print(f"Conexão encerrada por {cliente}")
             conn.close()
             break
     _thread.exit()
