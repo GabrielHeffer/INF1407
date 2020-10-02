@@ -6,6 +6,18 @@ from sys import argv
 from socket import socket, AF_INET, SOCK_STREAM
 from time import sleep
 
+import speech_recognition as sr
+
+
+
+def ouvir_microfone():
+    microfone = sr.Recognizer()
+    with sr.Microphone() as source:
+        microfone.adjust_for_ambient_noise(source)
+        print("Diga alguma coisa: ")
+        audio = microfone.listen(source)
+
+    return audio
 
 def main():
     host = '127.0.0.1'
@@ -19,22 +31,31 @@ def main():
     print('Entre com 1 se deseja escrever uma frase')
     escolha = input()
 
-    if (escolha == '1'):
-        print('Entre com a frase desejada:')
-        msg = input()
 
     # conectando com o servidor
     destino = (host, porta)
     servidor.connect(destino)
 
-    # enviando msg para o servidor
-    while True:
-        try:
-            servidor.send(bytearray(msg, 'utf-8'))
 
-        except:
-            print("Something else went wrong1")
+    if (escolha == '1'):
+        print('Entre com a frase desejada:')
+        msg = input()
+        # enviando msg para o servidor
+        while True:
+            try:
+                servidor.send(bytearray(msg, 'utf-8'))
 
+            except:
+                print("Algo esta errado com a frase")
+    else:
+        audio = ouvir_microfone()
+        # enviando msg para o servidor
+        while True:
+            try:
+                servidor.send(audio.frame_data)
+
+            except:
+                print("Algo esta errado com o audio")
     return
 
 
